@@ -1,205 +1,501 @@
-OnChainIQ Server
-Overview
-OnChainIQ is a backend server built for a hackathon demo, designed to power a cryptocurrency analysis platform. It provides API endpoints for user authentication, cryptocurrency analysis (IQ scores), news curation, advertisement management, chat interactions, and social features like bookmarks and follows. The server is built using Node.js with Express and connects to a MongoDB database using Mongoose. It integrates with the Sonar API for real-time cryptocurrency data and news.
-This project is part of a Vite-React / Node-Express stack, optimized for rapid development and deployment in a hackathon setting.
+Standalone Chat Subsystem
+A lightweight, standalone server-side chat system for cryptocurrency-related queries and commands. This system interacts with the Sonar API to provide general chat responses or raw, structured JSON responses for specific commands (e.g., FLASH, MOON). It requires no authentication, making it easy to set up and use.
 Features
 
-User Authentication: Demo user access with JWT-based authentication.
-IQ Scores: Generates cryptocurrency project analysis scores based on categories like audits and whitepapers.
-News Curation: Fetches and curates recent cryptocurrency news articles.
-Advertisements: Allows users to create, view, and delete ads with token-based pricing.
-Chatbot: Provides a conversational interface for users to query cryptocurrency data and execute commands (e.g., FLASH, MOON).
-Social Features: Supports bookmarks, follows, likes, and comments for user engagement.
-Rate Limiting: Implements API and action rate limits to prevent abuse.
-Security: Uses Helmet, CORS, and input sanitization to enhance security.
-Health Checks: Provides a /health endpoint to monitor server and database status.
-
-Tech Stack
-
-Node.js: Runtime environment (v18.0.0 or higher).
-Express: Web framework for API routing and middleware.
-MongoDB/Mongoose: Database for storing users, posts, and interactions.
-Axios: For making HTTP requests to the Sonar API.
-JWT (jsonwebtoken): For secure user authentication.
-Bcrypt: For password hashing.
-Sanitize-HTML: For sanitizing user inputs to prevent XSS.
-Helmet: For securing HTTP headers.
-CORS: For enabling cross-origin requests from the frontend.
-Express-Rate-Limit: For API and action rate limiting.
-Date-fns: For date manipulation and validation.
-Dotenv: For environment variable management.
-
-Project Structure
-onchainiq-server/
-├── documentation/           # More documentation and expository files like .env/architecture/apiref/etc.
-├── data/                    # Static data files (e.g., backupAds.json, commandServiceMap.json, IQSchema)
-├── src/
-│   ├── config/              # Database configuration
-│   │   └── db.js
-│   ├── controllers/         # Request handlers for API endpoints
-│   │   ├── adController.js
-│   │   ├── authController.js
-│   │   ├── bookmarkController.js
-│   │   ├── chatController.js
-│   │   └── userController.js
-│   ├── middleware/          # Custom middleware (e.g., rate limiting, error handling)
-│   ├── models/              # Mongoose schemas (e.g., User, AdItem, ChatPost)
-│   ├── pipelines/           # MongoDB aggregation pipelines
-│   ├── routes/              # Express route definitions
-│   ├── services/            # External API integrations (e.g., sonarChatService, sonarIQService)
-│   ├── utils/               # Utility functions (e.g., sanitization, response formatting)
-│   └── server.js            # Main server entry point
-├── .env                     # Environment variables (not committed)
-├── package.json             # Project dependencies and scripts
-└── README.md                # This file
+General Chat: Ask crypto-related questions and receive concise, expert responses.
+Commands: Retrieve raw JSON responses for cryptocurrency characteristics (e.g., FLASH for coins with sharp recoveries, MOON for micro-cap price spikes).
+Simple Setup: Run with Node.js, a .env file, and a single Invoke-RestMethod command.
+No Authentication: Publicly accessible API endpoint.
+Embedded Configurations: All command prompts and schemas are included in the code.
 
 Prerequisites
 
-Node.js: Version 18.0.0 or higher.
-MongoDB: A running MongoDB instance (local or cloud, e.g., MongoDB Atlas).
-Sonar API Key: Required for fetching cryptocurrency data and news.
-Git: For cloning the repository.
+Node.js: Version 18 or higher.
+Sonar API Key: Obtain from Perplexity AI or your Sonar API provider.
+npm: For installing dependencies.
 
-Setup Instructions
-1. Clone the Repository
+Setup
+
+Clone the Repository:
 git clone <repository-url>
-cd onchainiq-server
+cd chat-subsystem
 
-2. Install Dependencies
-Install the required Node.js packages using npm:
+
+Install Dependencies:
 npm install
 
-3. Configure Environment Variables
-Create a .env file in the project root based on the provided .env copy template. Populate it with the necessary values:
-# .env
-INITIAL_TOKEN_BALANCE=50
-CORS_ORIGIN=http://localhost:3000
-NODE_ENV=development
-PORT=5001
-MONGO_URI=<your-mongodb-connection-string>
-DB_NAME=<your-database-name>
-MONGO_MAX_POOL_SIZE=10
-MONGO_MIN_POOL_SIZE=2
-JWT_SECRET=<your-jwt-secret>
-JWT_EXPIRY=300000m
-COOKIE_SECRET=<your-cookie-secret>
-DEMO_SECRET_KEY=<your-demo-secret-key>
-DEMO_USER_PASSWORD=<your-demo-user-password>
-SONAR_API_KEY=<your-sonar-api-key>
-API_RATE_LIMIT_WINDOW_MS=60000
-API_RATE_LIMIT_MAX=10000
-ACTION_RATE_LIMIT_WINDOW_MS=900000
-ACTION_RATE_LIMIT_MAX=400
-SONAR_API_URL=https://api.perplexity.ai/chat/completions
-NODE_ENCRYPTION_SECRET=<your-32-bit-encryption-secret>
 
-Notes:
+Configure Environment Variables:
 
-Replace placeholders (e.g., <your-mongodb-connection-string>) with actual values.
-Ensure MONGO_URI points to a valid MongoDB instance.
-SONAR_API_KEY is required for external API calls.
-JWT_SECRET, COOKIE_SECRET, and NODE_ENCRYPTION_SECRET should be strong, unique strings.
-CORS_ORIGIN should match your frontend URL (e.g., http://localhost:3000 for local development).
+Copy .env.example to .env:cp .env.example .env
 
-4. Start the Server
-Run the server in development mode with hot-reloading:
-npm run dev
 
-Or start the server in production mode:
+Edit .env and add your Sonar API key:SONAR_API_KEY=your_sonar_api_key_here
+
+
+
+
+Start the Server:
 npm start
 
-The server will start on http://localhost:5001 (or the port specified in PORT).
-5. Verify Server Status
-Check the server health by accessing the health check endpoint:
-curl http://localhost:5001/api/v1/health
+The server will run on http://localhost:3000 (or the port specified in .env).
 
-Expected response (if healthy):
+
+Usage
+The server exposes a single endpoint: POST /api/v1/chat. Send a JSON body with either a message (for general chat) or a command (for specific data).
+Example: General Chat (Windows PowerShell)
+Invoke-RestMethod -Uri "http://localhost:3000/api/v1/chat" -Method Post -ContentType "application/json" -Body '{"message": "What is the latest trend in DeFi?"}'
+
+Response:
 {
-  "status": "OK",
-  "timestamp": "2025-05-10T12:34:56.789Z",
-  "database": {
-    "status": "connected",
-    "message": "Mongoose connection established.",
-    "readyState": 1
-  },
-  "requestId": "req-abc123"
+  "sender": "bot",
+  "text": "[Varies based on Sonar API, e.g., cross-chain protocols, tokenized assets]"
 }
 
-API Endpoints
-The API is versioned under /api/v1. Key endpoints include:
+Example: Command (e.g., GREEN) (Windows PowerShell)
+Invoke-RestMethod -Uri "http://localhost:3000/api/v1/chat" -Method Post -ContentType "application/json" -Body '{"command": "GREEN"}' | ConvertTo-Json -Depth 10
 
-Auth:
-POST /api/v1/auth/demo: Grants demo user access and returns a JWT.
-POST /api/v1/auth/logout: Acknowledges logout (client-side JWT removal).
+Response:
+{
+  "id": "chatcmpl-xyz789",
+  "object": "chat.completion",
+  "created": 1747351425,
+  "model": "sonar",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"green_status\":\"Found\",\"coins\":[{\"title\":\"EcoCoin Gains Traction in 2025\",\"summary\":\"EcoCoin, with a market cap of $15M, has seen a 25% increase in active addresses over the past week, driven by its energy-efficient Proof-of-Stake consensus. The coin recorded a 30% transaction growth in 7 days, reflecting strong adoption among eco-conscious investors. Partnerships with green tech firms have boosted its visibility, as reported in recent analyses. Its low carbon footprint makes it a top choice for sustainable crypto investments.\",\"source\":\"https://www.b2bnn.com/2025/03/green-cryptocurrencies-in-2025-promising-trends-and-sustainable-investment-opportunities/\",\"publish_date\":\"05/03/2025\"}],\"reason\":\"\",\"sources\":[\"https://101blockchains.com/best-green-cryptocurrencies/\",\"https://www.tribuneindia.com/partner-exclusives/5-crypto-to-buy-now-new-green-projects-in-2025/\",\"https://www.trgdatacenters.com/resource/most-environment-friendly-cryptocurrencies/\",\"https://www.b2bnn.com/2025/03/green-cryptocurrencies-in-2025-promising-trends-and-sustainable-investment-opportunities/\"]}"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 232,
+    "completion_tokens": 739,
+    "total_tokens": 971,
+    "search_context_size": "low"
+  },
+  "citations": [
+    "https://101blockchains.com/best-green-cryptocurrencies/",
+    "https://www.tribuneindia.com/partner-exclusives/5-crypto-to-buy-now-new-green-projects-in-2025/",
+    "https://www.trgdatacenters.com/resource/most-environment-friendly-cryptocurrencies/",
+    "https://www.b2bnn.com/2025/03/green-cryptocurrencies-in-2025-promising-trends-and-sustainable-investment-opportunities/"
+  ]
+}
 
+Supported Commands
 
-Ads:
-GET /api/v1/ads: Fetches ads for the authenticated user.
-POST /api/v1/ads: Creates a new ad (costs 1,000 tokens).
-DELETE /api/v1/ads/:id: Deletes an ad and its associated data.
-GET /api/v1/ads/slots: Checks available ad slots (max 10).
+FLASH: Smaller cryptocurrencies with sharp recovery after a price drop.
+GHOST: Low-cap cryptocurrencies with sudden blockchain activity and price gains.
+ZOMBIE: Smaller older cryptocurrencies with strong trading activity and price gains.
+DROP: Emerging cryptocurrencies with strong airdrop buzz and wallet growth.
+MOON: Micro-cap cryptocurrencies with strong price spikes and active development.
+DYNAMO: Emerging DeFi cryptocurrencies with strong on-chain activity.
+NUGS: Emerging NFT-related cryptocurrencies with strong marketplace activity.
+GREEN: Emerging eco-friendly cryptocurrencies with strong adoption.
+MEME: Emerging meme coins with strong social media hype.
+STABLE: Lesser-known stablecoins with notable supply growth and high trading volume.
+PUMP: Mid-cap cryptocurrencies with over 15% price surge and strong wallet holder retention.
 
+Project Structure
+chat-subsystem/
+├── server.js              # Entry point for the Express server
+├── sonarChatService.js    # Handles Sonar API calls with embedded configs
+├── chatController.js      # Processes chat and command requests
+├── chatRoutes.js          # Defines API routes
+├── .env.example           # Template for environment variables
+├── package.json           # Project dependencies and scripts
+├── README.md              # This file
+└── cmds.md                # Test commands for PowerShell
 
-Bookmarks:
-GET /api/v1/bookmarks: Fetches user bookmarks.
-POST /api/v1/bookmarks: Adds a bookmark (IQScore, NewsItem, or AdItem).
-DELETE /api/v1/bookmarks/:reportId: Removes a bookmark.
+Dependencies
 
-
-Chat:
-GET /api/v1/chatbot: Returns the chatbot welcome message.
-POST /api/v1/chatbot: Sends a user message and gets a bot response.
-POST /api/v1/chatbot/command: Processes a command (e.g., FLASH).
-POST /api/v1/chatbot/post: Posts a chat command result to the feed.
-
-
-Health:
-GET /api/v1/health: Returns server and database status.
-
-
-
-For a full list of endpoints, refer to the route files in src/routes/.
-Development Notes
-
-Linting: Run npm run lint to check code style or npm run lint:fix to auto-fix issues.
-Logging: Extensive logging is implemented with sanitized outputs to prevent sensitive data leaks.
-Error Handling: A global error handler (src/middleware/errorHandler.js) ensures consistent error responses.
-Sanitization: Inputs are sanitized using sanitize-html and custom utilities (src/utils/sanitize.js) to prevent XSS and other attacks.
-Rate Limiting: API requests are limited to 10,000 per minute per user/IP, and actions (e.g., ad creation) are limited to 400 per 15 minutes.
+express: Web framework for Node.js.
+axios: HTTP client for Sonar API requests.
+dotenv: Loads environment variables from .env.
 
 Troubleshooting
 
-MongoDB Connection Issues:
-Verify MONGO_URI and DB_NAME in .env.
-Ensure MongoDB is running and accessible.
-Check logs for connection errors.
+Missing API Key: Ensure SONAR_API_KEY is set in .env.
+Empty Response Content: If choices[0].message.content is empty, check server logs for [SonarChatService] errors and verify SONAR_API_KEY.
+Rate Limits: A 429 error indicates Sonar API rate limits; wait and retry.
+Server Not Starting: Check for port conflicts or missing dependencies (npm install).
+PowerShell Truncation: Pipe responses to ConvertTo-Json -Depth 10 to view full output.
 
 
-Sonar API Errors:
-Ensure SONAR_API_KEY is valid.
-Check for rate limit errors (HTTP 429) in logs.
-Verify SONAR_API_URL is correct.
+Contributing
+Submit issues or pull requests to the repository, ensuring changes align with the original system’s functionality.
+License
+MIT License. See LICENSE file for details.
+
+Standalone IQScore Subsystem
+
+A lightweight, standalone server-side system for generating IQ scores for blockchain projects using the Sonar API. It analyzes projects across multiple categories (e.g., audit, whitepaper, team) and returns raw, structured JSON responses, requiring no authentication for public access.
+
+Features
 
 
-Port Conflicts:
-If port 5001 is in use, update PORT in .env or free the port.
-
-
-CORS Issues:
-Ensure CORS_ORIGIN matches your frontend URL exactly.
 
 
 
-Hackathon Context
-This server is designed for a hackathon demo, prioritizing rapid feature delivery and a robust API for a React frontend. It showcases:
+Multi-Category Analysis: Generate scores for one or all categories (e.g., Audit, CodeQuality, Sentiment).
 
-Scalability: MongoDB connection pooling and rate limiting for high traffic.
-Security: Input sanitization, secure headers, and JWT authentication.
-Real-Time Data: Integration with the Sonar API for fresh cryptocurrency insights.
-User Engagement: Social features like bookmarks, ads, and chat to drive interaction.
+
+
+Raw Responses: Returns unparsed Sonar API responses, including choices, usage, and citations.
+
+
+
+Simple Setup: Run with Node.js, a .env file, and a single Invoke-RestMethod or curl command.
+
+
+
+No Authentication: Publicly accessible API endpoint.
+
+
+
+Embedded Configurations: All category prompts and schemas are included in the code.
+
+Prerequisites
+
+
+
+
+
+Node.js: Version 18 or higher.
+
+
+
+Sonar API Key: Obtain from Perplexity AI or your Sonar API provider.
+
+
+
+npm: For installing dependencies.
+
+Setup
+
+
+
+
+
+Clone the Repository:
+
+git clone <repository-url>
+cd iqscore-subsystem
+
+
+
+Install Dependencies:
+
+npm install
+
+
+
+Configure Environment Variables:
+
+
+
+
+
+Copy .env.example to .env:
+
+cp .env.example .env
+
+
+
+Edit .env and add your Sonar API key:
+
+SONAR_API_KEY=your_sonar_api_key_here
+
+
+
+Start the Server:
+
+npm start
+
+The server will run on http://localhost:3000 (or the port specified in .env).
+
+Usage
+
+The server exposes a single endpoint: POST /api/v1/iqscore. Send a JSON body with asset (project name), network (blockchain), and categories (optional, defaults to all).
+
+Example: Single Category (Windows PowerShell)
+
+Invoke-RestMethod -Uri "http://localhost:3000/api/v1/iqscore" -Method Post -ContentType "application/json" -Body '{"asset": "Uniswap", "network": "Ethereum", "categories": ["audit"]}' | ConvertTo-Json -Depth 10
+
+Response:
+
+{
+  "results": {
+    "audit": {
+      "status": "success",
+      "response": {
+        "id": "chatcmpl-xyz789",
+        "object": "chat.completion",
+        "created": 1747351425,
+        "model": "sonar-pro",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "{\"audit_status\":\"Found\",\"audits\":[{\"firm\":\"Certik\",\"year\":2024,\"scope\":\"token minting\",\"findings\":{\"critical\":0,\"high\":1,\"medium\":2,\"low\":3,\"informational\":5,\"resolved\":true},\"source\":\"https://example.com/certik-report.pdf\",\"score\":95}],\"final_score\":95,\"reason\":\"\",\"sources\":[\"https://example.com/certik-report.pdf\"]}"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 232,
+          "completion_tokens": 739,
+          "total_tokens": 971,
+          "search_context_size": "low"
+        },
+        "citations": ["https://example.com/certik-report.pdf"]
+      }
+    }
+  }
+}
+
+Example: Multiple Categories (curl)
+
+curl -X POST "http://localhost:3000/api/v1/iqscore" -H "Content-Type: application/json" -d "{\"asset\": \"Uniswap\", \"network\": \"Ethereum\", \"categories\": [\"audit\", \"whitepaper\"]}"
+
+Supported Categories
+
+
+
+
+
+audit
+
+
+
+code_quality
+
+
+
+ecosystem_adoption
+
+
+
+goal
+
+
+
+governance
+
+
+
+market
+
+
+
+regulatory_compliance
+
+
+
+scam
+
+
+
+sentiment
+
+
+
+team
+
+
+
+tokenomics
+
+
+
+value
+
+
+
+whitepaper
+
+Project Structure
+
+iqscore-subsystem/
+├── server.js              # Entry point for the Express server
+├── sonarIQService.js      # Handles Sonar API calls with embedded configs
+├── iqScoreController.js   # Processes IQScore requests
+├── iqScoreRoutes.js       # Defines API routes
+├── .env.example           # Template for environment variables
+├── package.json           # Project dependencies and scripts
+├── README.md              # This file
+├── invoke_cmds.md         # PowerShell test commands
+├── curl_cmds.md           # curl test commands
+├── developer_notes.md     # Developer insights
+
+Dependencies
+
+
+
+
+
+express: Web framework for Node.js.
+
+
+
+axios: HTTP client for Sonar API requests.
+
+
+
+dotenv: Loads environment variables from .env.
+
+Troubleshooting
+
+
+
+
+
+Missing API Key: Ensure SONAR_API_KEY is set in .env.
+
+
+
+Empty Response Content: If choices[0].message.content is empty, check server logs for [SonarIQService] errors and verify SONAR_API_KEY.
+
+
+
+Rate Limits: A 429 error indicates Sonar API rate limits; wait and retry.
+
+
+
+Server Not Starting: Check for port conflicts or missing dependencies (npm install).
+
+
+
+PowerShell Truncation: Pipe responses to ConvertTo-Json -Depth 10.
+
+Contributing
+
+Submit issues or pull requests to the repository, ensuring changes align with the original system’s functionality.
 
 License
-ISC License. See package.json for details.
+
+MIT License. See LICENSE file for details.
+
+Standalone News Subsystem
+A lightweight, standalone server-side news system for curating cryptocurrency-related articles using the Sonar API. This system fetches raw, structured JSON responses for specified topics, requiring no authentication for public access.
+Features
+
+News Curation: Fetch recent articles for crypto topics (e.g., DeFi, NFTs) with detailed summaries and sources.
+Raw Responses: Returns unparsed Sonar API responses, including choices, usage, and citations.
+Simple Setup: Run with Node.js, a .env file, and a single Invoke-RestMethod or curl command.
+No Authentication: Publicly accessible API endpoint.
+Embedded Configurations: All allowed interests are included in the code.
+
+Prerequisites
+
+Node.js: Version 18 or higher.
+Sonar API Key: Obtain from Perplexity AI or your Sonar API provider.
+npm: For installing dependencies.
+
+Setup
+
+Clone the Repository:
+git clone <repository-url>
+cd news-subsystem
 
 
-I did not as of yet wrap with Redis for rate limiting, and for this demo, I dont intend to. 
+Install Dependencies:
+npm install
+
+
+Configure Environment Variables:
+
+Copy .env.example to .env:cp .env.example .env
+
+
+Edit .env and add your Sonar API key:SONAR_API_KEY=your_sonar_api_key_here
+
+
+
+
+Start the Server:
+npm start
+
+The server will run on http://localhost:3000 (or the port specified in .env).
+
+
+Usage
+The server exposes a single endpoint: POST /api/v1/news. Send a JSON body with interests (array of topics) and days (lookback period).
+Example: News Query (Windows PowerShell)
+Invoke-RestMethod -Uri "http://localhost:3000/api/v1/news" -Method Post -ContentType "application/json" -Body '{"interests": ["DeFi", "NFT"], "days": 7}' | ConvertTo-Json -Depth 10
+
+Response:
+{
+  "id": "chatcmpl-xyz789",
+  "object": "chat.completion",
+  "created": 1747351425,
+  "model": "sonar",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"news_status\":\"Content Found\",\"articles\":[{\"title\":\"DeFi Lending Surges in 2025\",\"summary\":\"DeFi lending protocols like Aave and Compound have seen a 40% increase in TVL in the past week, driven by new yield farming opportunities. The trend is fueled by cross-chain integrations, allowing users to leverage assets across Ethereum and Layer 2 solutions. Recent X posts highlight strong community support, with 10,000 mentions in 24 hours.\",\"url\":\"https://example.com/defi-news\",\"publish_date\":\"05/03/2025\",\"source\":\"example.com\"}],\"reason\":\"\",\"sources\":[\"https://example.com/defi-news\"]}"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 232,
+    "completion_tokens": 739,
+    "total_tokens": 971,
+    "search_context_size": "low"
+  },
+  "citations": ["https://example.com/defi-news"]
+}
+
+Example: News Query (curl)
+curl -X POST "http://localhost:3000/api/v1/news" -H "Content-Type: application/json" -d "{\"interests\": [\"DeFi\", \"NFT\"], \"days\": 7}"
+
+Supported Interests
+See sonarNewsService.js for the full list of allowed interests, including:
+
+Web3
+Blockchain
+DeFi
+NFT
+Decentralized Identity
+DAO Governance Tools
+And more...
+
+Project Structure
+news-subsystem/
+├── server.js              # Entry point for the Express server
+├── sonarNewsService.js    # Handles Sonar API calls with embedded configs
+├── newsController.js      # Processes news requests
+├── newsRoutes.js          # Defines API routes
+├── .env.example           # Template for environment variables
+├── package.json           # Project dependencies and scripts
+├── README.md              # This file
+├── invoke_cmds.md         # PowerShell test commands
+├── curl_cmds.md           # curl test commands
+├── developer_notes.md     # Developer insights
+
+Dependencies
+
+express: Web framework for Node.js.
+axios: HTTP client for Sonar API requests.
+dotenv: Loads environment variables from .env.
+
+Troubleshooting
+
+Missing API Key: Ensure SONAR_API_KEY is set in .env.
+Empty Response Content: If choices[0].message.content is empty, check server logs for [SonarNewsService] errors and verify SONAR_API_KEY.
+Rate Limits: A 429 error indicates Sonar API rate limits; wait and retry.
+Server Not Starting: Check for port conflicts or missing dependencies (npm install).
+PowerShell Truncation: Pipe responses to ConvertTo-Json -Depth 10.
+
+Contributing
+Submit issues or pull requests to the repository, ensuring changes align with the original system’s functionality.
+License
+MIT License. See LICENSE file for details.
+
